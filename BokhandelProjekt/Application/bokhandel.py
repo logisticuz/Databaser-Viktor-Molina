@@ -6,7 +6,7 @@ import configparser
 def create_engine_connection():
     # Laddar konfigurationer från en .ini-fil
     config = configparser.ConfigParser()
-    config.read('database.ini')
+    config.read('config.ini')
 
     # Hämtar anslutningsuppgifter från konfigurationsfilen
     database_type = config['DATABASE']['Type']
@@ -22,7 +22,12 @@ def create_engine_connection():
 def get_user_input():
     # Interagerar med användaren för att få söksträng eller visa hjälpinstruktioner
     print("Ange en boktitel att söka efter (eller skriv 'hjälp' för att lära dig mer): ")
-    keyword = input("Sök efter boktitel: ")
+    keyword = input("Sök efter boktitel: ").strip() # Använder strip() för att ta bort onödiga mellanslag
+    
+    if not keyword:  # Hanterar fall där användaren bara trycker på Enter
+        print("Du måste ange en boktitel eller 'hjälp' för att fortsätta.")
+        return None, None
+    
     if keyword.lower() == 'hjälp':
         print("\nWildcard-sökning...")
         print("Använd '%' som wildcard för att ersätta en eller flera tecken.")
@@ -30,9 +35,13 @@ def get_user_input():
         print("'Potter%' hittar alla titlar som börjar med 'Potter'.")
         print("'%Harry Potter%' hittar alla titlar som innehåller 'Harry Potter'.\n")
         return None, None  # Returnerar None för att signalera att hjälp har visats
-    exact_match = input("Sök på exakt matchning? (ja/nej): ").lower()
-    exact_match = 'ja' in exact_match
-    return keyword, exact_match
+    
+    while True:  # En loop för att få ett giltigt svar på om sökningen ska vara exakt
+        exact_match = input("Sök på exakt matchning? (ja/nej): ").lower().strip()
+        if exact_match in ['ja', 'nej']:
+            exact_match = 'ja' in exact_match
+            return keyword, exact_match
+        print("Ange endast 'ja' eller 'nej'.")
 
 def execute_search_query(engine, keyword, exact_match):
     # Definierar SQL-fråga för att hitta böcker baserat på titel med möjlighet att ange exakt matchning
